@@ -1,0 +1,17 @@
+.contentArea {
+  flex-grow: 1;
+}
+.container {
+  padding: 1rem;
+  max-width: 1300px;
+  margin: 0 auto;
+}
+.wholeLayout {
+  min-height: 100vh;
+  display: flex !important;
+}
+@media (min-width: 1024px) {
+  .wholeLayout {
+    display: flex !important;
+  }
+}

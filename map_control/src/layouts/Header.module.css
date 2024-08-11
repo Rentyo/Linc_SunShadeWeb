@@ -1,0 +1,26 @@
+@media (min-width: 768px) {
+  .listBtn {
+    display: none !important;
+  }
+  .toggleBtn {
+    display: none;
+  }
+}
+
+/* @media (max-width: 768px) {
+  .menu {
+  }
+} */
+.user_icon {
+  border-radius: 30%;
+}
+.leftBtns {
+  display: flex;
+  align-items: center;
+}
+
+@media (max-width: 576px) {
+  .toggleBtn {
+    display: block;
+  }
+}
