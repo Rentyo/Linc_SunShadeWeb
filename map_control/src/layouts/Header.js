@@ -1,5 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { ToastContainer } from 'react-toastify';    
+import 'react-toastify/dist/ReactToastify.css';   
 import {
   Navbar,
   Collapse,
@@ -39,6 +41,11 @@ function Header() {
           <PiList size="1.5em" />
         </Button>
       </div>
+      <ToastContainer
+        autoClose={2000}
+        hideProgressBar
+        pauseOnHover = {false}
+      />
       <Collapse navbar>
         <Nav className="me-auto" navbar>
           <NavItem>

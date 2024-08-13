@@ -11,6 +11,7 @@ import { deviceActions } from "../redux/deviceSlice";
 import Modal from 'react-modal';
 import Select from "react-select";
 import * as controlFunction from "../Function/Control";
+import { toast } from 'react-toastify';    
 
 const Sidebar = () => {
   
@@ -220,7 +221,7 @@ const Sidebar = () => {
 
       });
       if (response.ok) {
-        alert("db에 작동 결과를 저장했습니다.")
+        console.log("db에 작동 결과를 저장했습니다.")
       } else {
         console.error('Network response was not ok:', response.statusText);
       }
@@ -229,7 +230,7 @@ const Sidebar = () => {
     } 
   }
   //버튼 클릭 시 경우의 수
-  const change_power =useCallback ((device_num, thing ,on_off) => {  
+  const change_power =useCallback ( async (device_num, thing ,on_off) => {  
     //DB와 전역 변수의 데이터가 일치하는지 확인
     const checkingPower = async () => {
       try {
@@ -248,38 +249,69 @@ const Sidebar = () => {
           switch(thing) {
             case 'sunshade_power':
               if(dataPower.power[0].sunshade_power !== on_off){
-                alert(device_num,"이미 진행된 절차입니다.")
-                return;
+                on_off ? dispatch(
+                  deviceActions.off_sunshade_power({
+                    device_num: device_num,
+                  }))
+                  :
+                  dispatch(
+                    deviceActions.on_sunshade_power({
+                      device_num: device_num,
+                    }))
+                toast.error(device_num + "의 차양막은 이미 원하는 상태입니다");
+                return false;
                 }
-              break;
+                return true;
             case 'led_power':
               if(dataPower.power[0].led_power !== on_off){
-                alert(device_num,"이미 진행된 절차입니다.")
-                return;
+                on_off ? dispatch(
+                  deviceActions.off_led_power({
+                    device_num: device_num,
+                  }))
+                  :
+                  dispatch(
+                    deviceActions.on_led_power({
+                      device_num: device_num,
+                    }))
+                    toast.error(device_num + "의 LED는 이미 원하는 상태입니다.");
+                return false;
               }
-              break;
+              return true;
               case 'led2_power':
                 if(dataPower.power[0].led2_power !== on_off){
-                  alert(device_num,"이미 진행된 절차입니다.")
-                  return;
+                  on_off ? dispatch(
+                    deviceActions.off_led2_power({
+                      device_num: device_num,
+                    }))
+                    :
+                    dispatch(
+                      deviceActions.on_led2_power({
+                        device_num: device_num,
+                      }))
+                      toast.error(device_num + "의 LED2는 이미 원하는 상태입니다.");
+                  return false;
                 }
-                break;
+                return true;
               default:
-                alert(device_num ,"잘못된 절차입니다");
-                break;
+                toast.error(device_num  + " 잘못된 절차입니다");
+                return false;
           }
 
         } else {
-          console.error('Network response was not ok:', response.statusText);
+          toast.error('Network response was not ok:', response.statusText);
+          return false;
         }
       } catch (error) {
-        console.error('Error:', error);
+        toast.error('Error:', error);
+        return false
       } 
     };
-    checkingPower();
-
     var haveMatched = true;
+    await checkingPower() ? haveMatched = true : haveMatched=false;
 
+    if(!haveMatched){
+      return;
+    }
     if(on_off === 1){
       switch(thing){
         case 'sunshade_power' :
@@ -288,7 +320,7 @@ const Sidebar = () => {
               device_num: device_num,
             })
           );
-          alert(`${device_num} 차양막을 접음`)
+          toast.success(`${device_num} 차양막을 접습니다`)
           break;
         case 'led_power' :
           dispatch(
@@ -296,7 +328,7 @@ const Sidebar = () => {
               device_num: device_num,
             })
           );
-          alert(`${device_num} led 꺼짐`)
+          toast.success(`${device_num} led 전원을 끕니다`)
           break;
           case 'led2_power' :
             dispatch(
@@ -304,7 +336,7 @@ const Sidebar = () => {
                 device_num: device_num,
               })
             );
-            alert(`${device_num} led2 꺼짐`)
+            toast.success(`${device_num} led2 전원을 끕니다`)
             break;
         default :
           haveMatched = false;  
@@ -319,7 +351,7 @@ const Sidebar = () => {
               device_num: device_num,
             })
           );
-          alert(`${device_num} 차양막 펼침`)
+          toast.success(`${device_num} 차양막을 펼칩니다`)
           break;
         case 'led_power' :
           dispatch(
@@ -327,15 +359,15 @@ const Sidebar = () => {
               device_num: device_num,
             })
           );
-          alert(`${device_num} led 킴`)
+          toast.success(`${device_num} led 전원을 킵니다`)
           break;
-          case 'led2_power' :
-            dispatch(
-              deviceActions.on_led2_power({
-                device_num: device_num,
-              })
-            );
-            alert(`${device_num} led2 킴`)
+        case 'led2_power' :
+          dispatch(
+            deviceActions.on_led2_power({
+              device_num: device_num,
+            })
+          );
+          toast.success(`${device_num} led2 전원을 킵니다`)
             break;
         default :
           haveMatched = false;
@@ -343,7 +375,7 @@ const Sidebar = () => {
       } 
     }
     else{
-      alert("잘못된 접근입니다.")
+      toast.error("잘못된 접근입니다.")
       haveMatched = false;
     }
     if(haveMatched){
@@ -538,9 +570,18 @@ const Sidebar = () => {
         )
       },
       buttons: [
-        { text: 'Sunshade_Power', onClick: () => change_power(device.device_num, 'sunshade_power',device.sunshade_power) ,color : (device.sunshade_power ? '#535C63' : '#241F20') ,backgroundColor : (device.sunshade_power ? '#EECAD5' : '#D1E9F6') },
-        { text: 'LED_Power', onClick: () => change_power(device.device_num, 'led_power',device.led_power) ,color : (device.sunshade_power ? '#535C63' : '#241F20') ,backgroundColor : (device.led_power ? '#EECAD5' : '#D1E9F6') },
-        { text: 'LED2_Power', onClick: () => change_power(device.device_num, 'led2_power',device.led2_power) ,color : (device.sunshade_power ? '#535C63' : '#241F20') ,backgroundColor : (device.led2_power ? '#EECAD5' : '#D1E9F6') },
+        { text: 'Sunshade_Power', onClick: (e) =>{
+          change_power(device.device_num, 'sunshade_power',device.sunshade_power);
+          e.stopPropagation(); // 버블링 막기 (sidebar item 전체를 클릭하는 이벤트 방지)
+        } ,color : (device.sunshade_power ? '#535C63' : '#241F20') ,backgroundColor : (device.sunshade_power ? '#EECAD5' : '#D1E9F6') },
+        { text: 'LED_Power', onClick: (e) => {
+          change_power(device.device_num, 'led_power',device.led_power);
+          e.stopPropagation(); // 버블링 막기 (sidebar item 전체를 클릭하는 이벤트 방지)
+        },color : (device.sunshade_power ? '#535C63' : '#241F20') ,backgroundColor : (device.led_power ? '#EECAD5' : '#D1E9F6') },
+        { text: 'LED2_Power', onClick: (e) => {
+          change_power(device.device_num, 'led2_power',device.led2_power);
+          e.stopPropagation(); // 버블링 막기 (sidebar item 전체를 클릭하는 이벤트 방지)
+        } ,color : (device.sunshade_power ? '#535C63' : '#241F20') ,backgroundColor : (device.led2_power ? '#EECAD5' : '#D1E9F6') },
       ],
     }));
 
@@ -575,13 +616,13 @@ const Sidebar = () => {
             console.log(selectedIPs[i],devices.find((device) => device.ip_address === selectedIPs[i])[mode[selectedMode-1]] === 1)
           }
           else if(action === 'select on' && device[mode[selectedMode-1]] === 1){
-            alert(selectedIPs[i] + "Already On")
+            toast.error(device.device_num + " Already On")
           }
           else if(action === 'select off' && device[mode[selectedMode-1]] === 0){
-            alert(selectedIPs[i] + "Already Off")
+            toast.error(selectedIPs[i] + "Already Off")
           }
           else {
-            alert("다중 선택 모드에서 잘못된 접근입니다1.")
+            toast.error("다중 선택 모드에서 잘못된 접근입니다1.")
           }
         }
         setSelectedIPs([]);
@@ -610,10 +651,10 @@ const Sidebar = () => {
             console.log(ip_address_all[i],devices.find((device) => device.ip_address === ip_address_all[i])[mode[selectedMode-1]] === 1)
           }
           else if(action === 'all on' && device[mode[selectedMode-1]] === 1){
-            alert(ip_address_all[i] + "Already On")
+            toast.error(device.device_num + " Already On")
           }
           else if(action === 'all off' && device[mode[selectedMode-1]] === 0){
-            alert(ip_address_all[i] + "Already Off")
+            toast.error(device.device_num + "Already Off")
           }
           else {
             alert("다중 선택 모드에서 잘못된 접근입니다1.")
