@@ -21,7 +21,7 @@
 .sidebarNav {
   padding-left: 0rem;
   overflow-y: auto;  /* 수직 스크롤바 추가 */
-  max-height : 100vh;
+  max-height : 85vh;
 }
 .title {
   margin-left: 0.75rem;

@@ -15,3 +15,16 @@
     display: flex !important;
   }
 }
+/* @media (max-width: 768px) {
+  .sidebarArea {
+    position: fixed;
+    height: 100%;
+    overflow: auto;
+    z-index: 2;
+    margin-left: -400px;
+    transition: 0.2s ease-in;
+  }
+  .showSidebar {
+    margin-left: 0px;
+  }
+} */

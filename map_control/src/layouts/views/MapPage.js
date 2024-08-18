@@ -10,12 +10,14 @@ import { deviceActions } from "../../redux/deviceSlice";
 import { ownerActions } from "../../redux/ownerSlice"
 import { mapActions } from "../../redux/mapSlice"
 
+import { useOutletContext } from 'react-router-dom';
 
 const MapPage = () => {
   const navigate = useNavigate();
   const [selectedDevice, setSelectedDevice] = useState(null);
   const [map, setMap] =useState(null);
   const [loading, setLoading] = useState(true);
+
 
   const dispatch = useDispatch();
   const devices = useSelector(
@@ -24,7 +26,7 @@ const MapPage = () => {
   const owners = useSelector(
     (state) =>  state.owners.owners
   )
-
+  const {clickIcon} = useOutletContext();
 
   const data = useMemo(() => [
     { loc: "서구", lat: 36.355602, long:127.384228 },
@@ -162,16 +164,19 @@ const MapPage = () => {
               var markerImage = new window.kakao.maps.MarkerImage(imageSrc, imageSize, imageOption)
               var marker = new window.kakao.maps.Marker({
                 position: position,
-                image: markerImage // 마커이미지 설정
+                image: markerImage, // 마커이미지 설정
               });
             window.kakao.maps.event.addListener(marker, "click", function () {
-              setSelectedDevice(device);
+              // setSelectedDevice(device);
+              clickIcon(device);
             });
+            marker.id=device.device_num
             marker.setMap(map); 
+          
           });
         });
       }
-  }, [devices, dispatch, map, owners])
+  }, [clickIcon, devices, dispatch, map, owners])
 
   const handleCloseInfo = () => {
     setSelectedDevice(null);

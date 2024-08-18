@@ -8,10 +8,6 @@ import {
   Nav,
   NavItem,
   NavbarBrand,
-  DropdownToggle,
-  DropdownMenu,
-  DropdownItem,
-  Dropdown,
   Button,
 } from "reactstrap";
 import { ReactComponent as LogoWhite } from "../assets/lettuce_White.svg";
@@ -22,10 +18,6 @@ import { PiList } from "react-icons/pi";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 function Header() {
-  const [dropdownOpen, setDropdownOpen] = React.useState(false);
-
-  const toggle = () => setDropdownOpen((prevState) => !prevState);
-
   const showMobilemenu = () => {
     document
       .getElementById("sidebarArea")
@@ -55,23 +47,13 @@ function Header() {
           </NavItem>
         </Nav>
         {/* <Button className="btn btn-info btn-sm">{isLoggedIn? dept + "관리자" : "사용자명"}</Button> */}
-        <Dropdown isOpen={dropdownOpen} toggle={toggle}>
-          <DropdownToggle color="dark">
-            <img
+        <img
               src={icon_user}
               alt="profile"
               className={styles.user_icon}
-              width="30"
+              width="40"
+              height="40"
             ></img>
-          </DropdownToggle>
-          <DropdownMenu>
-            <DropdownItem header>Info</DropdownItem>
-            <DropdownItem>My Account</DropdownItem>
-            <DropdownItem>Edit Profile</DropdownItem>
-            <DropdownItem divider />
-            <DropdownItem>Logout</DropdownItem>
-          </DropdownMenu>
-        </Dropdown>
       </Collapse>
     </Navbar>
   );
