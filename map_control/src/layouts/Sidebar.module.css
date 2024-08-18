@@ -90,15 +90,6 @@
 }
 
 /* 검색 창 CSS */
-.info {
-  color: black;
-  border-width: 0px 0px 2px 0px ;
-  border-style: solid;
-  margin-top: 5px;
-}
-.searchli {
-  color: black;
-}
 
 /* 다수 모델 선택 CSS */
 
@@ -128,6 +119,7 @@
 }
 
 .guideButtons {
+  
   display: flex;
   justify-content: space-between;
   width: 100%;

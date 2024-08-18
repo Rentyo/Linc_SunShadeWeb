@@ -37,7 +37,6 @@ const MapPage = () => {
   ], []); 
 
   useEffect(() => {
-    console.log('Fetching data...'); 
     const getOwnerData = async () => {
       try {
         const response = await fetch("/api/getOwner", {
@@ -89,7 +88,6 @@ const MapPage = () => {
   }, [dispatch])
 
   useEffect(() => {
-    console.log("맵 불러오기")
     let mapInstance;
     
     //카카오 맵 api 키 바꾸기

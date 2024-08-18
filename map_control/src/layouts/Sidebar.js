@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Button,ButtonGroup,Table } from "reactstrap";
+import { Button,ButtonGroup,Table,Pagination, PaginationItem, PaginationLink } from "reactstrap";
 import Logo from "./Logo";
 import styles from "./Sidebar.module.css";
 import styles_Full from "./FullLayout.module.css";
@@ -58,6 +58,9 @@ const Sidebar = (props) => {
   const openSModal = () => setSModalIsOpen(true);
   const closeSModal = () => setSModalIsOpen(false);
 
+  //검색 Pagination
+  const [sPagination, setSPagination] = useState([]);
+
   //다수 디바이스 제어 모달
   const [mModalIsOpen, setMModalIsOpen] = useState(false);
   const openMModal = () => {
@@ -74,66 +77,103 @@ const Sidebar = (props) => {
   const itemRefs = useRef([]);
 
 
-
   const showMobilemenu = () => {
     document
       .getElementById("sidebarArea")
       .classList.toggle(styles_Full.showSidebar);
   };
 
-  const removeAllChildNods = (el) => {
-    console.log(el)
-    while (el.hasChildNodes()) {
-      el.removeChild (el.lastChild);
-  }
+
+  const removeAllChildNodes = (parent) => {
+    while(parent.firstChild) {
+      parent.removeChild(parent.firstChild);
+    }
   }
 
   const displayPagination = (pagination) => {
-    var paginationEl = document.getElementById('pagination'),
-    fragment = document.createDocumentFragment(),
-    i; 
 
-  // 기존에 검색 다이얼로그에 추가된 페이지번호를 삭제합니다
-  while (paginationEl.hasChildNodes()) {
-      paginationEl.removeChild (paginationEl.lastChild);
-  }
-
-  for (i=1; i<=pagination.last; i++) {
-      var el = document.createElement('a');
-      el.href = "#";
-      el.innerHTML = i;
-
-      if (i===pagination.current) {
-          el.className = 'on';
-      } else {
-          el.onclick = (function(i) {
-              return function() {
-                  pagination.gotoPage(i);
-              }
-          })(i);
+    const pages = [];
+        pages.push(
+          <PaginationItem key='first'>
+            <PaginationLink
+              first
+              href="#"
+              onClick={() => {pagination.gotoPage(1);
+                var modal = document.getElementById("searchModal");
+                modal.scrollTop =0;
+              }}
+            />
+          </PaginationItem>
+        )
+        pages.push(
+          <PaginationItem key='back'>
+            <PaginationLink
+              href="#"
+              previous
+              onClick={() => {
+                pagination.gotoPage(pagination.current-1);
+                var modal = document.getElementById("searchModal");
+                modal.scrollTop =0;
+              }}
+            />
+          </PaginationItem>
+        )
+    for (let i=1; i<=pagination.last; i++) {
+        pages.push(
+          <PaginationItem key={i} active={i === pagination.current}>
+            <PaginationLink href="#" onClick={() => {pagination.gotoPage(i);
+              var modal = document.getElementById("searchModal");
+              modal.scrollTop =0;
+            }}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
       }
-
-      fragment.appendChild(el);
-  }
-  paginationEl.appendChild(fragment);
+      pages.push(
+        <PaginationItem key='next'>
+          <PaginationLink
+            href="#"
+            next
+            onClick={() => {pagination.gotoPage(pagination.current +1);
+              var modal = document.getElementById("searchModal");
+              modal.scrollTop =0;
+            }}
+          />
+        </PaginationItem>
+      )
+      pages.push(
+        <PaginationItem key='last'>
+          <PaginationLink
+            href="#"
+            last
+            onClick={() => {pagination.gotoPage(pagination.last);
+              var modal = document.getElementById("searchModal");
+              modal.scrollTop =0;
+            }}
+          />
+        </PaginationItem>
+      )
+    setSPagination(pages)
 }
   const getListItem = (index, places) => {
-    var el = document.createElement('li'),
+    var el = document.createElement('tr'),
     itemStr = `
-    <span class="markerbg marker_${index + 1}"></span>
-    <div class="${styles.info}">
-        <h5>${places.place_name}</h5>`;
-
+    <th>${index+1}</th>
+    <th>${places.place_name}</th>`;
+    itemStr += `<th>`
     if (places.road_address_name) {
         itemStr += `    <span>` + places.road_address_name + `</span>` +
                     `/   <span className="jibun gray">` +  places.address_name  + `/</span>`;
     } else {
         itemStr += `    <span>` +  places.address_name  + `/</span>`; 
     }
+
     if (places.phone){             
       itemStr += `  <span className="tel">` + places.phone  + `/</span>` +
                 `</div>`;           
     }
+    itemStr += `</th>`
 
     el.innerHTML = itemStr;
     el.className = styles.searchli;
@@ -158,35 +198,26 @@ const Sidebar = (props) => {
     return el;
   }
   const displayPlaces = (places) => {
-      console.log(window.kakao.maps)
-      var listEl = document.getElementById('placesList'),
-      metnuEl = document.getElementById('menu_wrap'),
-      fragment = document.createDocumentFragment(),
-      bounds = new window.kakao.maps.LatLngBounds()
-      // 검색 결과 목록에 추가된 항목들을 제거합니다
-      removeAllChildNods(listEl);
-      var h3 = document.createElement('h3')
-      h3.innerHTML = `${places.length}건의 검색 결과`;
-      h3.className = `${styles.title}`;
+      var bounds = new window.kakao.maps.LatLngBounds(),
+      table = document.getElementById('placeTable')
+      if (table) {
+          removeAllChildNodes(table)
+      }
       for ( var i=0; i<places.length; i++ ) {
         var placePosition = new window.kakao.maps.LatLng(places[i].y, places[i].x),
         itemEl = getListItem(i, places[i]);
         bounds.extend(placePosition)
-        fragment.appendChild(itemEl);
+        table.appendChild(itemEl);
       }
-      var hr = document.createElement('hr')
-      listEl.appendChild(h3)
-      listEl.appendChild(hr)
-      listEl.appendChild(fragment);
-      metnuEl.scrollTop = 0;
       kakaomap.setBounds(bounds)
   }
 
   const placesSearchCB = (data, status, pagination) => {
     
     if(status === window.kakao.maps.services.Status.OK) {
+        //검색 결과
         displayPlaces(data);
-
+        //Pagination
         displayPagination(pagination)
     }
     else if (status === window.kakao.maps.services.Status.ZERO_RESULT) {
@@ -301,12 +332,12 @@ const Sidebar = (props) => {
 
       });
       if (response.ok) {
-        console.log("db에 작동 결과를 저장했습니다.")
+        toast.success("db에 작동 결과를 저장했습니다.")
       } else {
-        console.error('Network response was not ok:', response.statusText);
+        toast.error('Network response was not ok:', response.statusText);
       }
     } catch (error) {
-      console.error('Error:', error);
+      toast.error('Error:', error);
     } 
   }
   //버튼 클릭 시 경우의 수
@@ -569,7 +600,6 @@ const Sidebar = (props) => {
       alert('이미 선택한 데이터입니다');
       return;
     }
-    console.log(newSelectedIPs)
     setSelectedIPs(newSelectedIPs);
   };
 
@@ -584,11 +614,9 @@ const Sidebar = (props) => {
           const device = devices.find((device) => device.ip_address === selectedIPs[i])
           if(action === 'select on' && device[mode[selectedMode-1]] === 0){
             change_power(device.device_num, mode[selectedMode-1], device[mode[selectedMode-1]])
-            console.log(selectedIPs[i],devices.find((device) => device.ip_address === selectedIPs[i])[mode[selectedMode-1]] === 0)
           }
           else if(action === 'select off' && device[mode[selectedMode-1]] === 1){
             change_power(device.device_num, mode[selectedMode-1], device[mode[selectedMode-1]])
-            console.log(selectedIPs[i],devices.find((device) => device.ip_address === selectedIPs[i])[mode[selectedMode-1]] === 1)
           }
           else if(action === 'select on' && device[mode[selectedMode-1]] === 1){
             toast.error(device.device_num + " Already On")
@@ -616,14 +644,11 @@ const Sidebar = (props) => {
       else if(ip_address_all.length !== 0){
         for(let i =0 ; i<ip_address_all.length; i++){
           const device = devices[i]
-          console.log(action, device[mode[selectedMode-1]])
           if(action === 'all on' && device[mode[selectedMode-1]] === 0){
             change_power(device.device_num, mode[selectedMode-1], device[mode[selectedMode-1]])
-            console.log(ip_address_all[i],devices.find((device) => device.ip_address === ip_address_all[i])[mode[selectedMode-1]] === 0)
           }
           else if(action === 'all off' && device[mode[selectedMode-1]] === 1){
             change_power(device.device_num, mode[selectedMode-1], device[mode[selectedMode-1]])
-            console.log(ip_address_all[i],devices.find((device) => device.ip_address === ip_address_all[i])[mode[selectedMode-1]] === 1)
           }
           else if(action === 'all on' && device[mode[selectedMode-1]] === 1){
             toast.error(device.device_num + " Already On")
@@ -647,7 +672,7 @@ const Sidebar = (props) => {
   };
   const customStyles = {
     overlay: {
-      backgroundColor: " rgba(0, 0, 0, 0.4)",
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
       width: "100%",
       height: "100vh",
       zIndex: "10",
@@ -656,7 +681,7 @@ const Sidebar = (props) => {
       left: "0",
     },
     content: {
-      width: "500px",
+      width: "60%",
       height: "500px",
       zIndex: "150",
       position: "absolute",
@@ -665,7 +690,7 @@ const Sidebar = (props) => {
       transform: "translate(-50%, -50%)",
       borderRadius: "10px",
       boxShadow: "2px 2px 2px rgba(0, 0, 0, 0.25)",
-      backgroundColor: "white",
+      backgroundColor: "#FEF3E2",
       justifyContent: "center",
       overflow: "auto",
     },
@@ -709,17 +734,17 @@ const Sidebar = (props) => {
         </div>
         <div className={styles.buttonContainer}>
             <ButtonGroup  className={styles.guideButtons}>
-              <Button className = {styles.guideButton} onClick={() => setSelectedMode(1)} active={selectedMode === 1}>SunShade</Button>
-              <Button className = {styles.guideButton} onClick={() => setSelectedMode(2)} active={selectedMode === 2}>LED1</Button>
-              <Button className = {styles.guideButton} onClick={() => setSelectedMode(3)} active={selectedMode === 3}>LED2</Button>
+              <Button style = {{background: '#D0B8A8', color : 'black', fontWeight : 'bold'}} className = {styles.guideButton} onClick={() => setSelectedMode(1)} active={selectedMode === 1}>SunShade</Button>
+              <Button style = {{background: '#D0B8A8', color : 'black', fontWeight : 'bold'}} className = {styles.guideButton} onClick={() => setSelectedMode(2)} active={selectedMode === 2}>LED1</Button>
+              <Button style = {{background: '#D0B8A8', color : 'black', fontWeight : 'bold'}} className = {styles.guideButton} onClick={() => setSelectedMode(3)} active={selectedMode === 3}>LED2</Button>
             </ButtonGroup>
             <div className={styles.upperButtons}>
-              <Button className = {styles.Btn1} onClick={() => handleButtonClick('select on')}>Select On</Button>
-              <Button className = {styles.Btn2} onClick={() => handleButtonClick('select off')}>Select Off</Button>
+              <Button style= {{background: '#C5705D', color : 'white', fontWeight : 'bold'}} className = {styles.Btn1} onClick={() => handleButtonClick('select on')}>Select On</Button>
+              <Button style= {{background: '#C5705D', color : 'white', fontWeight : 'bold'}} className = {styles.Btn2} onClick={() => handleButtonClick('select off')}>Select Off</Button>
             </div>
             <div className={styles.lowerButtons}>
-              <Button className = {styles.Btn1} onClick={() => handleButtonClick('all on')}>All On</Button>
-              <Button className = {styles.Btn2} onClick={() => handleButtonClick('all off')}>All Off</Button>
+              <Button style= {{background: '#C5705D', color : 'white', fontWeight : 'bold'}} className = {styles.Btn1} onClick={() => handleButtonClick('all on')}>All On</Button>
+              <Button style= {{background: '#C5705D', color : 'white', fontWeight : 'bold'}} className = {styles.Btn2} onClick={() => handleButtonClick('all off')}>All Off</Button>
             </div>
         </div>
       </Modal>
@@ -730,13 +755,36 @@ const Sidebar = (props) => {
         onRequestClose={closeSModal}
         style={customStyles}
         contentLabel="Select Control Devices"
+        id="searchModal"
       >
-        <div id="menu_wrap" className={styles.menu_wrap}>
-          <ul id="placesList"></ul>
-          <hr></hr>
-          <div id="pagination"></div>
-        </div>
-        <Button onClick={closeSModal}>닫기</Button>
+        <Table
+          bordered
+          hover
+          responsive>
+        <thead>
+          <tr>
+            <th style={{background: '#DFD3C3'}}>
+              #
+            </th>
+            <th style={{background: '#DFD3C3'}}>
+              Spot
+            </th>
+            <th style={{background: '#DFD3C3'}}>
+              Location
+            </th>
+          </tr>
+        </thead>
+        <tbody id="placeTable">
+        </tbody>
+        </Table>
+        <hr></hr>
+        <Pagination aria-label="Page navigation example"
+        size="sm"
+        id = "tablePagination">
+          {sPagination.length !==0  ? sPagination :
+          <></>}
+        </Pagination>
+        <Button style = {{background: '#D0B8A8', color : 'black', fontWeight : 'bold'}} onClick={closeSModal}>닫기</Button>
       </Modal>
 
       <div className={styles.logo}>
