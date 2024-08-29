@@ -15,7 +15,7 @@
     display: flex !important;
   }
 }
-/* @media (max-width: 768px) {
+@media (max-width: 768px) {
   .sidebarArea {
     position: fixed;
     height: 100%;
@@ -27,4 +27,4 @@
   .showSidebar {
     margin-left: 0px;
   }
-} */
+}

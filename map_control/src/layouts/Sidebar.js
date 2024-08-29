@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Button,ButtonGroup,Table,Pagination, PaginationItem, PaginationLink } from "reactstrap";
+import { Button,Table,Pagination, PaginationItem, PaginationLink } from "reactstrap";
 import Logo from "./Logo";
 import styles from "./Sidebar.module.css";
 import styles_Full from "./FullLayout.module.css";
@@ -27,6 +27,26 @@ const Sidebar = (props) => {
   const owners = useSelector(
     (state) =>  state.owners.owners
   )
+
+
+  const [isMultiControl, setIsMultiControl] = useState(false);
+  
+  const [selectedIPs,setSelectedIPs] = useState([]);
+  
+  const handleMultiControlToggle = () => {
+    if (isMultiControl) {
+      setSelectedIPs([]);
+    }
+    setIsMultiControl(!isMultiControl);
+  };
+  const handleDeviceSelect = (deviceIP) => {
+    setSelectedIPs((prevSelected) =>
+      prevSelected.includes(deviceIP)
+        ? prevSelected.filter((IP) => IP !== deviceIP)
+        : [...prevSelected, deviceIP]
+    );
+  };
+  
   const dispatch = useDispatch();
 
   //숨긴 마커
@@ -61,17 +81,11 @@ const Sidebar = (props) => {
   //검색 Pagination
   const [sPagination, setSPagination] = useState([]);
 
-  //다수 디바이스 제어 모달
-  const [mModalIsOpen, setMModalIsOpen] = useState(false);
-  const openMModal = () => {
-    setSelectedMode(null);
-    setMModalIsOpen(true);
-  }
-  const closeMModal = () => setMModalIsOpen(false);
+
 
   const [searchMarker , setMarkers] = useState(null);
 
-  const [selectedIPs,setSelectedIPs] = useState([]);
+ 
   const [selectedMode, setSelectedMode] = useState(null);
   
   const itemRefs = useRef([]);
@@ -222,12 +236,12 @@ const Sidebar = (props) => {
     }
     else if (status === window.kakao.maps.services.Status.ZERO_RESULT) {
 
-    alert('검색 결과가 존재하지 않습니다.');
+    toast.error('검색 결과가 존재하지 않습니다.');
     return;
 
     } else if (status === window.kakao.maps.services.Status.ERROR) {
 
-    alert('검색 결과 중 오류가 발생했습니다.');
+    toast.error('검색 결과 중 오류가 발생했습니다.');
     return;
 
     }
@@ -243,11 +257,13 @@ const Sidebar = (props) => {
   const handleSearch = (event) => {
     const searchValue = document.getElementById("search_input").value.split(' ').join('')
 
-    if(hideMarker.length !== 0){
+    const markerReset = () => {if(hideMarker.length !== 0){
       hideMarker.forEach((icon) => icon.setMap(kakaomap))
+    }
     }
 
     if (!searchValue.replace(/^\s+|\s+$/g, '')) {
+      markerReset()
       toast.error('키워드를 입력해주세요!');
       setHideMarker([])
       setNavItems(NavItems(devices))
@@ -255,11 +271,13 @@ const Sidebar = (props) => {
     }
     //디바이스 번호로 검색
     if(searchValue.toLowerCase() === 'all'){
+      markerReset()
       setHideMarker([])
       setNavItems(NavItems(devices));
       
     } 
     else if(!isNaN(searchValue) && searchMode === false){
+      markerReset()
       const matchedDevice = devices.filter((device) => 
         device.device_num === searchValue)
       if(matchedDevice.length !== 0 ){
@@ -279,6 +297,7 @@ const Sidebar = (props) => {
       }
     }
     else if(isNaN(searchValue) && searchMode === false){
+      markerReset()
       const filterData =
       devices.filter((device) => 
         (device.device_owner.split(' ').join('') 
@@ -522,15 +541,21 @@ const Sidebar = (props) => {
     dong_nm : device.dong_nm,
     device_owner : device.device_owner,
     device_num : device.device_num,
+    ip_address : device.ip_address,
     upStr : device[sort],
     downStr : `Device ${device.device_num}`,
     clickEvent : () => {
-      kakaomap.setCenter(
-        new window.kakao.maps.LatLng(
-          device.latitude,
-          device.longitude,
+      if(isMultiControl){
+        handleDeviceSelect(device.ip_address)
+      }
+      else{
+        kakaomap.setCenter(
+          new window.kakao.maps.LatLng(
+            device.latitude,
+            device.longitude,
+          )
         )
-      )
+      }
     },
     buttons: [
       { text: 'Sunshade_Power', onClick: (e) =>{
@@ -546,7 +571,7 @@ const Sidebar = (props) => {
         e.stopPropagation(); // 버블링 막기 (sidebar item 전체를 클릭하는 이벤트 방지)
       } ,color : (device.sunshade_power ? '#535C63' : '#241F20') ,backgroundColor : (device.led2_power ? '#EECAD5' : '#D1E9F6') },
     ],
-  }))}, [change_power, getIconURL, kakaomap]);
+  }))}, [change_power, getIconURL, isMultiControl, kakaomap]);
 
   // 사이드바 아이템 및 버튼 설정
   useEffect(() => {
@@ -593,15 +618,15 @@ const Sidebar = (props) => {
       
     }
   } 
-
-  const handleChange = (selectedOptions) => {
-    const newSelectedIPs = selectedOptions.map(option => option.value);
-    if (new Set(newSelectedIPs).size !== newSelectedIPs.length) {
-      alert('이미 선택한 데이터입니다');
-      return;
-    }
-    setSelectedIPs(newSelectedIPs);
-  };
+  /* 예전 다수 선택 모달 창에서 사용하던 메서드 */
+  // const handleChange = (selectedOptions) => {
+  //   const newSelectedIPs = selectedOptions.map(option => option.value);
+  //   if (new Set(newSelectedIPs).size !== newSelectedIPs.length) {
+  //     alert('이미 선택한 데이터입니다');
+  //     return;
+  //   }
+  //   setSelectedIPs(newSelectedIPs);
+  // };
 
   const handleButtonClick = (action) => {
     const mode = ['sunshade_power','led_power', 'led2_power' ];
@@ -629,7 +654,6 @@ const Sidebar = (props) => {
           }
         }
         setSelectedIPs([]);
-        closeMModal()
       } 
       else {
         alert("값을 입력해주세요");
@@ -661,11 +685,9 @@ const Sidebar = (props) => {
           }
         }
         setSelectedIPs([]);
-        closeMModal()
       }
       else{
         toast.error("device가 존재하지 않습니다")
-        closeMModal()
       } 
     
     }
@@ -700,7 +722,8 @@ const Sidebar = (props) => {
     
     <div className={styles.sidebarBorder}>
 
-      <Modal
+      {/*예전 다중 컨트롤러*/}
+      {/* <Modal
         ariaHideApp={false}
         isOpen={mModalIsOpen}
         onRequestClose={closeMModal}
@@ -747,8 +770,10 @@ const Sidebar = (props) => {
               <Button style= {{background: '#C5705D', color : 'white', fontWeight : 'bold'}} className = {styles.Btn2} onClick={() => handleButtonClick('all off')}>All Off</Button>
             </div>
         </div>
-      </Modal>
+      </Modal> */}
       
+
+      {/* 장소명 검색 결과 모달 */}
       <Modal
         ariaHideApp={false}
         isOpen={sModalIsOpen}
@@ -790,14 +815,21 @@ const Sidebar = (props) => {
       <div className={styles.logo}>
         <Logo></Logo>
         <span>
-          <Button 
+          {/* 예전 멀티 컨트롤 버튼 */}
+          {/* <Button 
             onClick={() => openMModal()}
             color="info"
             outline>
             Multi Control
+          </Button> */}
+          <Button
+            onClick={handleMultiControlToggle}
+            color="info"
+            outline>
+            {isMultiControl ? 'Done' : 'Multi Control'}
           </Button>
         </span>
-        {/* 화면 크기가 줄었을 시 나오는 버튼인데... 나중 활용 
+        {/* 화면 크기가 줄었을 시 나오는 버튼인데... 나중 활용  */}
         <span className={styles.btn}>
           <Button
             close
@@ -805,7 +837,7 @@ const Sidebar = (props) => {
             className={styles.btn}
             onClick={() => showMobilemenu()}
           ></Button>
-        </span> */}
+        </span>
       </div>
       <InputGroup className="mb-3, mt-3">
         <Form.Control placeholder="Click to Search" id="search_input"/>
@@ -824,10 +856,62 @@ const Sidebar = (props) => {
           }))}
           onChange={sortingItem}
         />
+
+      {/* 멀티 컨트롤 */}
+      {isMultiControl && (
+        <div className={styles.multiControlBtn}>
+          <div className={styles.container}>
+            <div className={styles.tabs}>
+              <input
+                type="radio"
+                id="radio-1"
+                name="tabs"
+                checked={selectedMode === 1}
+                onChange={() => setSelectedMode(1)}
+              />
+              <label className={styles.tab} htmlFor="radio-1">
+                SunShade
+              </label>
+
+              <input
+                type="radio"
+                id="radio-2"
+                name="tabs"
+                checked={selectedMode === 2}
+                onChange={() => setSelectedMode(2)}
+              />
+              <label className={styles.tab} htmlFor="radio-2">LED1</label>
+
+              <input
+                type="radio"
+                id="radio-3"
+                name="tabs"
+                checked={selectedMode === 3}
+                onChange={() => setSelectedMode(3)}
+              />
+              <label className={styles.tab} htmlFor="radio-3">LED2</label>
+
+              <span className={styles.glider}></span>
+            </div>
+          </div>
+
+
+          <div className={styles.upperButtons}>
+            <Button className={styles.Btn1} onClick={() => handleButtonClick('select on')}>Select On</Button>
+            <Button className={styles.Btn2} onClick={() => handleButtonClick('select off')}>Select Off</Button>
+          </div>
+          <div className={styles.lowerButtons}>
+            <Button className={styles.Btn1} onClick={() => handleButtonClick('all on')}>All On</Button>
+            <Button className={styles.Btn2} onClick={() => handleButtonClick('all off')}>All Off</Button>
+          </div>
+        </div>
+      )}
+
+
       <div className={styles.navArea}>
-      <div vertical={true.toString()} className={styles.sidebarNav}>
+      <div vertical={true.toString()} className={`${styles.sidebarNav} ${isMultiControl ? styles.multiControlActive : ''}`}>
       {navItems.map((navi, index) => (
-        <div id = {navi.device_num} ref={(el) => {itemRefs.current[index] = el }} key={index} className={styles.sidenavBg} onClick={navi.clickEvent}>
+        <div id = {navi.device_num} ref={(el) => {itemRefs.current[index] = el }} key={index} className={`${styles.sidenavBg} ${isMultiControl ? styles.multiControl : ''}`} onClick={navi.clickEvent}>
           <div className={styles.iconSection}>
             {navi.icon}
           </div>
@@ -836,7 +920,29 @@ const Sidebar = (props) => {
               {navi.upStr} <br/>({navi.downStr})
             </div>
           </div>
-          {navi.buttons.map((button, btnIndex) => (
+          {isMultiControl && (
+                <>
+                  {navi.buttons.map((button, btnIndex) => (
+                    <Button
+                      key={btnIndex}
+                      className={styles.deviceButton}
+                      style={{ background: `${button.backgroundColor}`, color: `${button.color}`, fontWeight: `${'bold'}` }}
+                      disabled={true}
+                    >
+                      {button.text}
+                    </Button>
+                  ))}
+
+                  <input
+                    type="checkbox"
+                    checked={selectedIPs.includes(navi.ip_address)}
+                    onChange={() => handleDeviceSelect(navi.ip_address)}
+                    onClick={(event) => event.stopPropagation()} // 버블링 방지
+                    className={styles.deviceCheckbox}
+                  />
+                </>
+              )}
+            {!isMultiControl &&navi.buttons.map((button, btnIndex) => (
             <Button
               key={btnIndex}
               className={styles.deviceButton}

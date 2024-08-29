@@ -39,7 +39,7 @@ const MapPage = () => {
   useEffect(() => {
     const getOwnerData = async () => {
       try {
-        const response = await fetch("/api/getOwner", {
+        const response = await fetch(process.env.REACT_APP_DB_HOST +"/api/getOwner", {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -61,7 +61,7 @@ const MapPage = () => {
     getOwnerData();
     const getDeviceData = async () => {
       try {        
-        const response = await fetch("/api/getDevice", {
+        const response = await fetch(process.env.REACT_APP_DB_HOST+"/api/getDevice", {
           method: "GET",
           headers: {
             "Content-Type": "application/json",

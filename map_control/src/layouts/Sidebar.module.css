@@ -1,6 +1,7 @@
 /* 사이드 바 CSS */
 .sidebarBorder {
   padding: 0.75rem;
+  background-color: #fdfdfd;
 }
 .logo {
   display: flex;
@@ -21,7 +22,12 @@
 .sidebarNav {
   padding-left: 0rem;
   overflow-y: auto;  /* 수직 스크롤바 추가 */
-  max-height : 85vh;
+  max-height : 80vh;
+}
+.sidebarNav.multiControlActive{
+  padding-left: 0rem;
+  max-height: 70vh;
+  overflow-y: auto;
 }
 .title {
   margin-left: 0.75rem;
@@ -119,11 +125,11 @@
 }
 
 .guideButtons {
-  
   display: flex;
   justify-content: space-between;
   width: 100%;
   margin-bottom: 10px;
+  z-index: -1;
 }
 .guideButton {
   width: 33%;
@@ -148,4 +154,148 @@
 
 .lowerButtons button {
   width: 48%;
+}
+
+/* From Uiverse.io by Ghost-aft */ 
+.radio-input input {
+  display: none;
+}
+
+.radio-input {
+  --container_width: 300px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-radius: 10px;
+  background-color: #fff;
+  color: #000000;
+  width: var(--container_width);
+  overflow: hidden;
+  border: 1px solid rgba(53, 52, 52, 0.226);
+}
+
+.radio-input label {
+  width: 100%;
+  padding: 10px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1;
+  font-weight: 600;
+  letter-spacing: -1px;
+  font-size: 14px;
+}
+
+.selection {
+  display: none;
+  position: absolute;
+  height: 100%;
+  width: calc(var(--container_width) / 2);
+  z-index: 0;
+  left: 0;
+  top: 0;
+  transition: 0.15s ease;
+}
+
+.multiControlBtn{
+  margin-bottom: 1rem;
+  margin-top : 1rem;
+}
+
+.tabs {
+  margin-bottom: 1rem;
+  display: flex;
+  position: relative;
+  background-color: #fff;
+  box-shadow: 0 0 1px 0 rgba(24, 94, 224, 0.15), 0 6px 12px 0 rgba(24, 94, 224, 0.15);
+  padding: 0.75rem;
+  border-radius: 99px;
+  justify-content: space-around;
+}
+
+.tabs * {
+  z-index: 2;
+}
+
+.container input[type="radio"] {
+  display: none;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  width: 50px;
+  font-size: .8rem;
+  color: black;
+  font-weight: 500;
+  border-radius: 99px;
+  cursor: pointer;
+  transition: color 0.15s ease-in;
+}
+
+.notification {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: .8rem;
+  height: .8rem;
+  position: absolute;
+  top: 10px;
+  left: 30%;
+  font-size: 10px;
+  margin-left: 0.75rem;
+  border-radius: 50%;
+  margin: 0px;
+  background-color: #e6eef9;
+  transition: 0.15s ease-in;
+}
+
+.container input[type="radio"]:checked + label {
+  color: #185ee0;
+}
+
+.container input[type="radio"]:checked + label > .notification {
+  background-color: #185ee0;
+  color: #fff;
+  margin: 0px;
+}
+
+.container input[id="radio-1"]:checked ~ .glider {
+  transform: translateX(0);
+}
+
+.container input[id="radio-2"]:checked ~ .glider {
+  transform: translateX(100%);
+}
+
+.container input[id="radio-3"]:checked ~ .glider {
+  transform: translateX(200%);
+}
+
+.glider {
+  position: absolute;
+  display: flex;
+  height: 30px;
+  width: 50px;
+  /* background-color: #e6eef9; */
+  z-index: 1;
+  border-radius: 99px;
+  transition: 0.25s ease-out;
+}
+
+@media (max-width: 700px) {
+ 
+  .tabs {
+    transform: scale(0.6);
+  }
+}
+
+.Btn1, .Btn2 {
+  color: black;
+  background-color: #fff;
+  box-shadow: 0 0 1px 0 rgba(24, 94, 224, 0.15), 0 6px 12px 0 rgba(24, 94, 224, 0.15);
+  border: none;
 }
